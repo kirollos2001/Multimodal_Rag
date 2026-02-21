@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano Banana — AI Fashion Assistant</title>
+    <meta name="description"
+        content="Your personal AI-powered fashion assistant. Find the perfect outfit with text or image search.">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="app-container" id="appContainer">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i data-lucide="sparkles"></i>
+                    </div>
+                    <span class="logo-text">NANO <span class="logo-highlight">BANANA</span></span>
+                </div>
+            </div>
+
+            <button class="new-chat-btn" id="newChatBtn">
+                <i data-lucide="plus"></i>
+                <span>New Chat</span>
+            </button>
+
+            <div class="sidebar-section">
+                <div class="section-label">Recent</div>
+                <div class="chat-history" id="chatHistory">
+                    <!-- Dynamic history items -->
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="brand-badge">
+                    <i data-lucide="shirt" class="brand-badge-icon"></i>
+                    <span>AI Fashion Assistant</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-main">
+
+            <!-- Top Bar -->
+            <header class="topbar">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="topbar-title">
+                    <i data-lucide="sparkles" class="topbar-icon"></i>
+                    <span>Nano Banana</span>
+                </div>
+                <div class="topbar-actions">
+                    <button class="icon-btn" id="clearChatBtn" title="Clear chat">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chatMessages">
+                <!-- Welcome Screen (shown when no messages) -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-logo">
+                        <div class="welcome-icon-ring">
+                            <i data-lucide="sparkles"></i>
+                        </div>
+                    </div>
+                    <h1 class="welcome-title">أهلاً! أنا مساعدك الذكي 👋</h1>
+                    <p class="welcome-subtitle">ابعتلي صورة أو اكتبلي اللي بتدور عليه وأنا أجيبهولك</p>
+
+                    <div class="suggestion-chips">
+                        <button class="chip" data-query="عايز جاكت شتوي أسود">
+                            <i data-lucide="shirt"></i>
+                            <span>جاكت شتوي أسود</span>
+                        </button>
+                        <button class="chip" data-query="Show me casual outfits under 1000 EGP">
+                            <i data-lucide="tag"></i>
+                            <span>Casual under 1000</span>
+                        </button>
+                        <button class="chip" data-query="هودي oversize">
+                            <i data-lucide="zap"></i>
+                            <span>هودي Oversize</span>
+                        </button>
+                        <button class="chip" data-query="What styles do you have?">
+                            <i data-lucide="palette"></i>
+                            <span>What styles?</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <!-- Image Preview Bar -->
+                <div class="attached-preview hidden" id="attachedPreview">
+                    <div class="preview-thumb" id="previewThumb"></div>
+                    <span class="preview-name" id="previewName">image.jpg</span>
+                    <button class="preview-remove" id="removeAttachment">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+
+                <form class="input-form" id="chatForm">
+                    <button type="button" class="attach-btn" id="attachBtn" title="Upload image">
+                        <i data-lucide="image-plus"></i>
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+
+                    <div class="input-wrapper">
+                        <textarea id="messageInput" rows="1" placeholder="Message Nano Banana..."
+                            autocomplete="off"></textarea>
+                    </div>
+
+                    <button type="submit" class="send-btn" id="sendBtn" disabled>
+                        <i data-lucide="arrow-up"></i>
+                    </button>
+                </form>
+
+                <p class="input-hint">Nano Banana can search products by text or image. Powered by AI.</p>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
