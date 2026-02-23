@@ -4,6 +4,7 @@
 import os
 import uuid
 import logging
+import json
 from typing import List, Dict, Tuple, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
@@ -14,48 +15,16 @@ from .model_utils import get_image_embedding, get_text_embedding, load_siglip_mo
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def parse_info_file(file_path: str) -> Dict:
+def parse_json_file(file_path: str) -> Dict:
     """
-    Parses the info.txt file to extract Description, ID, and Price.
-    Returns a dictionary with keys: 'description', 'id', 'price'.
+    Parses the gemini_description.json file.
     """
-    info = {'description': '', 'id': '', 'price': 0.0}
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            
-            # Simple parsing logic based on "Key: Value"
-            if ':' in line:
-                key, value = line.split(":", 1)
-                key = key.strip().lower()
-                value = value.strip()
-                
-                if key == "description":
-                    info['description'] = value
-                elif key == "id":
-                    info['id'] = value
-                elif key == "price":
-                    try:
-                        # Remove commas and currency symbols if present
-                        clean_value = value.replace(',', '').replace('$', '').strip()
-                        if clean_value.upper() == "SALE PRICE":
-                            info['price'] = 0.0
-                            logger.info(f"Price marked as 'SALE PRICE' in {file_path}, defaulting to 0.0")
-                        else:
-                            info['price'] = float(clean_value)
-                    except ValueError:
-                        logger.warning(f"Could not parse price '{value}' in {file_path}, defaulting to 0.0")
-                        info['price'] = 0.0
-                    
-        return info
+            return json.load(f)
     except Exception as e:
-        logger.error(f"Error reading info file {file_path}: {e}")
-        return info
+        logger.error(f"Error reading json file {file_path}: {e}")
+        return {}
 
 def process_product_folder(base_folder: str) -> List[PointStruct]:
     """
@@ -82,35 +51,53 @@ def process_product_folder(base_folder: str) -> List[PointStruct]:
     for folder in subfolders:
         folder_name = os.path.basename(folder)
         
-        # 1. Parse Info File
-        info_file = os.path.join(folder, "info.txt")
-        product_info = {'description': '', 'id': folder_name, 'price': 0.0}
+        # 1. Parse JSON File
+        info_file = os.path.join(folder, "gemini_description.json")
+        product_info = {}
         
         if os.path.exists(info_file):
-            product_info = parse_info_file(info_file)
+            product_info = parse_json_file(info_file)
         else:
-            logger.warning(f"No info.txt found in {folder_name}")
+            logger.warning(f"No gemini_description.json found in {folder_name}")
             
         # Ensure we have a product ID, fallback to folder name if missing
-        product_id = product_info.get('id') or folder_name
-        price = product_info.get('price', 0.0)
-        description = product_info.get('description', '')
+        product_id = product_info.get('ID', folder_name)
+        try:
+            price = float(product_info.get('Price', 0.0))
+        except (ValueError, TypeError):
+            price = 0.0
+            
+        # Combine all attributes except ID and Price for text embedding
+        text_attributes = []
+        for key, value in product_info.items():
+            if key not in ['ID', 'Price']:
+                text_attributes.append(f"{key}: {value}")
+        
+        description = ", ".join(text_attributes)
 
-        # 2. Process Text (Description) -> Create Vector
+        # Build base payload including all attributes
+        base_payload = {
+            "product_id": str(product_id),
+            "price": price,
+            "source_folder": folder_name
+        }
+        for key, value in product_info.items():
+             base_payload[key] = value
+
+        # 2. Process Text (Combined Attributes) -> Create Vector
         if description:
             text_embedding = get_text_embedding(description)
             if text_embedding:
                 point_id = str(uuid.uuid4())
+                payload = base_payload.copy()
+                payload.update({
+                    "type": "text",
+                    "text_content": description
+                })
                 points.append(PointStruct(
                     id=point_id,
                     vector=text_embedding,
-                    payload={
-                        "product_id": str(product_id),
-                        "price": price,
-                        "type": "text",
-                        "text_content": description,
-                        "source_folder": folder_name
-                    }
+                    payload=payload
                 ))
 
         # 3. Process Images -> Create Vectors
@@ -129,16 +116,15 @@ def process_product_folder(base_folder: str) -> List[PointStruct]:
             
             if image_embedding:
                 point_id = str(uuid.uuid4())
+                payload = base_payload.copy()
+                payload.update({
+                    "type": "image",
+                    "image_filename": img_file
+                })
                 points.append(PointStruct(
                     id=point_id,
                     vector=image_embedding,
-                    payload={
-                        "product_id": str(product_id),
-                        "price": price,
-                        "type": "image",
-                        "image_filename": img_file,
-                        "source_folder": folder_name
-                    }
+                    payload=payload
                 ))
     
     return points

@@ -243,10 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         row.innerHTML = `
-            <div class="message-bubble">
-                ${imageHTML}
-                ${escapeHtml(text)}
-            </div>
+            <div class="message-bubble">${imageHTML}${escapeHtml(text)}</div>
         `;
         chatMessages.appendChild(row);
         scrollToBottom();
@@ -259,8 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let productsHTML = '';
         if (products && products.length > 0) {
             productsHTML = `<div class="product-grid">${products.map(p => {
-                const imgSrc = p.image
-                    ? `/images/${p.image}`
+                const imgSrc = p.image && p.folder
+                    ? `/images/${p.folder}/${p.image}`
                     : 'https://placehold.co/300x400?text=No+Image';
                 const price = p.price ? `${p.price} EGP` : '';
                 const score = p.score ? `${(p.score * 100).toFixed(0)}% match` : '';
@@ -286,10 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="message-avatar">
                 <i data-lucide="sparkles"></i>
             </div>
-            <div class="message-bubble">
-                ${formattedText}
-                ${productsHTML}
-            </div>
+            <div class="message-bubble">${formattedText}${productsHTML}</div>
         `;
         chatMessages.appendChild(row);
         lucide.createIcons();
@@ -304,13 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="message-avatar">
                 <i data-lucide="sparkles"></i>
             </div>
-            <div class="message-bubble">
-                <div class="typing-indicator">
+            <div class="message-bubble"><div class="typing-indicator">
                     <div class="typing-dot"></div>
                     <div class="typing-dot"></div>
                     <div class="typing-dot"></div>
-                </div>
-            </div>
+                </div></div>
         `;
         chatMessages.appendChild(row);
         lucide.createIcons();

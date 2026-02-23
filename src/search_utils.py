@@ -51,7 +51,7 @@ def search_products(
             query=embedding,
             query_filter=qdrant_filter,
             limit=top_k * 2,  # Fetch extra to allow grouping
-            score_threshold=0.3
+            score_threshold=0.15
         )
 
         # 4. Group by product (source_folder) and merge data
@@ -69,6 +69,13 @@ def search_products(
                     'score': point.score,
                     'description': None,
                     'image': None,
+                    'category': payload.get('Category'),
+                    'color': payload.get('Color'),
+                    'formality': payload.get('Formality'),
+                    'gender': payload.get('Gender'),
+                    'season': payload.get('Season'),
+                    'style': payload.get('Style'),
+                    'pattern': payload.get('Pattern'),
                 }
 
             entry = product_map[folder]
@@ -78,8 +85,8 @@ def search_products(
                 entry['score'] = point.score
 
             # Fill in description and image from whichever point type has it
-            if payload.get('type') == 'text' and payload.get('text_content'):
-                entry['description'] = payload['text_content']
+            if payload.get('Description'):
+                entry['description'] = payload['Description']
             if payload.get('type') == 'image' and payload.get('image_filename'):
                 entry['image'] = payload['image_filename']
 
@@ -103,8 +110,8 @@ def search_products(
                     for sib in siblings[0]:
                         sp = sib.payload
                         entry = product_map[folder]
-                        if sp.get('type') == 'text' and sp.get('text_content') and not entry['description']:
-                            entry['description'] = sp['text_content']
+                        if sp.get('Description') and not entry['description']:
+                            entry['description'] = sp['Description']
                         if sp.get('type') == 'image' and sp.get('image_filename') and not entry['image']:
                             entry['image'] = sp['image_filename']
                 except Exception as e:
