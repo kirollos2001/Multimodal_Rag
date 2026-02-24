@@ -2,6 +2,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue, Range
 from typing import List, Dict, Optional, Union
 import logging
+import math
 from PIL import Image
 
 from .config import Config
@@ -10,24 +11,61 @@ from .model_utils import get_text_embedding, get_image_embedding
 logger = logging.getLogger(__name__)
 
 
+def _combine_embeddings(vec_a: List[float], vec_b: List[float]) -> List[float]:
+    """
+    Combines two embedding vectors by element-wise addition and L2 normalization.
+    This fuses visual and textual signals into a single query vector.
+    """
+    combined = [a + b for a, b in zip(vec_a, vec_b)]
+    norm = math.sqrt(sum(x * x for x in combined))
+    if norm > 0:
+        combined = [x / norm for x in combined]
+    return combined
+
+
 def search_products(
-    query: Union[str, Image.Image],
+    query: Optional[Union[str, Image.Image]] = None,
+    query_image: Optional[Image.Image] = None,
     filters: Optional[Dict] = None,
     top_k: int = 20
 ) -> List[Dict]:
     """
     Searches for products in Qdrant using semantic embeddings and metadata filters.
     Returns grouped results: each product has image, price, id, description, and score.
+
+    Supports three modes:
+      - Text only:  query="black jacket"
+      - Image only: query=<PIL Image>  OR  query_image=<PIL Image>
+      - Multimodal: query="black jacket", query_image=<PIL Image>
+        -> final_vec = normalize(image_vec + text_vec)
     """
     client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)
 
-    # 1. Generate Embedding for Query
-    if isinstance(query, str):
-        embedding = get_text_embedding(query)
-    else:
-        embedding = get_image_embedding(query)
+    # 1. Generate Embedding(s) for Query
+    text_embedding = None
+    image_embedding = None
 
-    if not embedding:
+    # Handle text query
+    if isinstance(query, str):
+        text_embedding = get_text_embedding(query)
+    # Handle image passed via `query` param (backward compatible)
+    elif isinstance(query, Image.Image):
+        image_embedding = get_image_embedding(query)
+
+    # Handle image passed via dedicated `query_image` param
+    if query_image is not None:
+        image_embedding = get_image_embedding(query_image)
+
+    # Combine or select embedding
+    if text_embedding and image_embedding:
+        # Multimodal: image_vec + text_vec
+        embedding = _combine_embeddings(image_embedding, text_embedding)
+        logger.info("Using combined image + text embedding for search.")
+    elif text_embedding:
+        embedding = text_embedding
+    elif image_embedding:
+        embedding = image_embedding
+    else:
         logger.error("Failed to generate embedding for query.")
         return []
 
