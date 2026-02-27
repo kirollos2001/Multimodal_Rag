@@ -262,13 +262,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const price = p.price ? `${p.price} EGP` : '';
                 const score = p.score ? `${(p.score * 100).toFixed(0)}% match` : '';
                 const desc = p.description || '';
+                const idText = p.id || p.folder || 'N/A';
                 return `
                     <div class="product-card">
-                        <img src="${imgSrc}" alt="Product" 
-                             onerror="this.src='https://placehold.co/300x400?text=No+Image'">
+                        <div class="product-card-image-wrapper">
+                            <span class="product-card-badge">ID: ${idText}</span>
+                            <img src="${imgSrc}" alt="Product" 
+                                 onerror="this.src='https://placehold.co/300x400?text=No+Image'">
+                        </div>
                         <div class="product-card-info">
-                            ${price ? `<div class="product-card-price">${price}</div>` : ''}
-                            ${score ? `<div class="product-card-score">${score}</div>` : ''}
+                            <div class="product-card-meta">
+                                ${price ? `<span class="product-card-price">${price}</span>` : ''}
+                                ${score ? `<span class="product-card-score">${score}</span>` : ''}
+                            </div>
                             ${desc ? `<div class="product-card-desc">${desc}</div>` : ''}
                         </div>
                     </div>

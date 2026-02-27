@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.git/
+.gitignore
+uploads/
+qdrant_local/
+node_modules/
+tests/
