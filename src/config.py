@@ -15,4 +15,4 @@ class Config:
     SIGLIP_MODEL_NAME = os.getenv("SIGLIP_MODEL_NAME", "google/siglip-base-patch16-224")
 
     # Base folder for images (defaulting to the one used in ingestion)
-    BASE_IMAGE_FOLDER = r"C:\Users\kirollos\products_images"
+    BASE_IMAGE_FOLDER = os.getenv("BASE_IMAGE_FOLDER", r"C:\Users\kirollos\products_images")
