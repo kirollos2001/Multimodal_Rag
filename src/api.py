@@ -126,9 +126,21 @@ async def chat_endpoint(
         qdrant_results = []
 
         if image_path:
-            qdrant_results = search_products(
-                query=image_path, filters=extracted_params, top_k=10
-            )
+            from PIL import Image
+            try:
+                with Image.open(image_path) as img:
+                    img.load()  # Make sure image data is available after closing
+                
+                # Multimodal search: query text + image
+                qdrant_results = search_products(
+                    query=search_query if search_query else None,
+                    query_image=img,
+                    filters=extracted_params,
+                    top_k=10
+                )
+            except Exception as e:
+                logger.error(f"Failed to load user image: {e}")
+                qdrant_results = []
         elif search_query:
             qdrant_results = search_products(
                 query=search_query, filters=extracted_params, top_k=10
@@ -173,9 +185,20 @@ async def search_endpoint(
     qdrant_results = []
 
     if image_path:
-        qdrant_results = search_products(
-            query=image_path, filters=extracted_params, top_k=20
-        )
+        from PIL import Image
+        try:
+            with Image.open(image_path) as img:
+                img.load()
+            
+            qdrant_results = search_products(
+                query=search_query if search_query else None,
+                query_image=img,
+                filters=extracted_params,
+                top_k=20
+            )
+        except Exception as e:
+            logger.error(f"Failed to load user image: {e}")
+            qdrant_results = []
     elif search_query:
         qdrant_results = search_products(
             query=search_query, filters=extracted_params, top_k=20
