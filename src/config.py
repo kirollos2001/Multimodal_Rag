@@ -13,6 +13,8 @@ class Config:
     QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "products_siglip")
     
     SIGLIP_MODEL_NAME = os.getenv("SIGLIP_MODEL_NAME", "google/siglip-base-patch16-224")
+    
+    SEARCH_THRESHOLD = float(os.getenv("SEARCH_THRESHOLD", 0.3))
 
     # Base folder for images (defaulting to the one used in ingestion)
     BASE_IMAGE_FOLDER = os.getenv("BASE_IMAGE_FOLDER", r"C:\Users\kirollos\products_images")

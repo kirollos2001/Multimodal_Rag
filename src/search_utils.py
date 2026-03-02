@@ -89,7 +89,7 @@ def search_products(
             query=embedding,
             query_filter=qdrant_filter,
             limit=top_k * 2,  # Fetch extra to allow grouping
-            score_threshold=0.15
+            score_threshold=Config.SEARCH_THRESHOLD
         )
 
         # 4. Group by product (source_folder) and merge data
@@ -106,7 +106,7 @@ def search_products(
                     'price': payload.get('price'),
                     'score': point.score,
                     'description': None,
-                    'image': None,
+                    'images': [],
                     'category': payload.get('Category'),
                     'color': payload.get('Color'),
                     'formality': payload.get('Formality'),
@@ -122,16 +122,18 @@ def search_products(
             if point.score > entry['score']:
                 entry['score'] = point.score
 
-            # Fill in description and image from whichever point type has it
+            # Fill in description and collect all images
             if payload.get('Description'):
                 entry['description'] = payload['Description']
             if payload.get('type') == 'image' and payload.get('image_filename'):
-                entry['image'] = payload['image_filename']
+                img_name = payload['image_filename']
+                if img_name not in entry['images']:
+                    entry['images'].append(img_name)
 
-        # 5. For products still missing image or description, look them up
+        # 5. For products still missing images or description, look them up
         folders_need_lookup = [
             f for f, p in product_map.items()
-            if p['image'] is None or p['description'] is None
+            if len(p['images']) == 0 or p['description'] is None
         ]
 
         if folders_need_lookup:
@@ -150,8 +152,10 @@ def search_products(
                         entry = product_map[folder]
                         if sp.get('Description') and not entry['description']:
                             entry['description'] = sp['Description']
-                        if sp.get('type') == 'image' and sp.get('image_filename') and not entry['image']:
-                            entry['image'] = sp['image_filename']
+                        if sp.get('type') == 'image' and sp.get('image_filename'):
+                            img_name = sp['image_filename']
+                            if img_name not in entry['images']:
+                                entry['images'].append(img_name)
                 except Exception as e:
                     logger.warning(f"Failed to look up siblings for '{folder}': {e}")
 

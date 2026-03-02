@@ -255,27 +255,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let productsHTML = '';
         if (products && products.length > 0) {
-            productsHTML = `<div class="product-grid">${products.map(p => {
-                const imgSrc = p.image && p.folder
-                    ? `/images/${p.folder}/${p.image}`
-                    : 'https://placehold.co/300x400?text=No+Image';
+            productsHTML = `<div class="product-list">${products.map(p => {
+                // Build images array from the new `images` field, fallback to old `image` field
+                let imageFiles = [];
+                if (p.images && p.images.length > 0) {
+                    imageFiles = p.images;
+                } else if (p.image) {
+                    imageFiles = [p.image];
+                }
+
+                const imagesHTML = imageFiles.length > 0
+                    ? imageFiles.map(img => `
+                        <img src="/images/${p.folder}/${img}" alt="Product" 
+                             onerror="this.src='https://placehold.co/300x400?text=No+Image'">
+                    `).join('')
+                    : `<img src="https://placehold.co/300x400?text=No+Image" alt="No Image">`;
+
                 const price = p.price ? `${p.price} EGP` : '';
                 const score = p.score ? `${(p.score * 100).toFixed(0)}% match` : '';
                 const desc = p.description || '';
                 const idText = p.id || p.folder || 'N/A';
+                const color = p.color || '';
+                const category = p.category || '';
+
                 return `
-                    <div class="product-card">
-                        <div class="product-card-image-wrapper">
-                            <span class="product-card-badge">ID: ${idText}</span>
-                            <img src="${imgSrc}" alt="Product" 
-                                 onerror="this.src='https://placehold.co/300x400?text=No+Image'">
+                    <div class="product-item">
+                        <div class="product-item-images">
+                            ${imagesHTML}
                         </div>
-                        <div class="product-card-info">
-                            <div class="product-card-meta">
-                                ${price ? `<span class="product-card-price">${price}</span>` : ''}
-                                ${score ? `<span class="product-card-score">${score}</span>` : ''}
+                        <div class="product-item-details">
+                            <div class="product-item-header">
+                                <span class="product-item-id">ID: ${idText}</span>
+                                ${score ? `<span class="product-item-score">${score}</span>` : ''}
                             </div>
-                            ${desc ? `<div class="product-card-desc">${desc}</div>` : ''}
+                            <div class="product-item-tags">
+                                ${price ? `<span class="product-item-price">${price}</span>` : ''}
+                                ${color ? `<span class="product-item-tag">${color}</span>` : ''}
+                                ${category ? `<span class="product-item-tag">${category}</span>` : ''}
+                            </div>
+                            ${desc ? `<div class="product-item-desc">${desc}</div>` : ''}
                         </div>
                     </div>
                 `;
